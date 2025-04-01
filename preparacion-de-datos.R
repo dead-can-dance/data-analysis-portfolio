@@ -1,0 +1,6 @@
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(dplyr)
+setwd("/home/fabian/R/proyectos/analisis-bellabeat/datasets")
+read.csv("dailyActivity_merged.csv")
