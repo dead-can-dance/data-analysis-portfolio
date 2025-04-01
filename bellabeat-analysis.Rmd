@@ -36,10 +36,14 @@ _Actividad física_, _sueño_, _estrés_.
 
 ### 1.4 Tarea Empresarial
 <ins>CONSIGNA: </ins>Analizar el uso de gadgets de usuarios que **NO** son de bellabeats para aplicar este conocimiento
-en la empresa y finalmente presentalo.
+en la empresa y finalmente presentarlo.
+
 	Puntos clave:
+		
 		1. Encontrar la tendencias de uso de los gadgets de los usuarios de otras aplicaciones.
-		2. Buscar la manera de usar estas tendencias a los usuarios de Bellabeat.
+		
+		2. Buscar la manera de usar estas tendencias para los usuarios de Bellabeat.
+		
 		3. Lograr que estas tendencias ayuden a influir en la estrategia de marketing de bellabeat
 
 
@@ -69,6 +73,10 @@ library(ggplot2)
 library(tidyr)
 library(readr)
 library(dplyr)
+library(skimr)
+library(here)
+library(janitor)
+library(lubridate)
 ```
 
 ### Cargando las bases de datos correspondiantes
@@ -83,10 +91,35 @@ track_peso <- read.csv("weightLogInfo_merged.csv")
 ```
 
 ### 2.1 Pre-exploración de datos
+Lo primero que haremos es visualizar el panorama general de los marcos de datos con los que estamos trabajando, los ordenaremos y filtraremos con
+el propósito de obtener un subconjunto de datos más manejable para nuestro análisis. Más adelante transforaremos datos para garantizar la integridad de los datos y proceder con el análisis.
+
+```{r}
+glimpse(act_diaria)
+Sub_act_diaria <- act_diaria %>%
+  mutate(ActivityDate = mdy(ActivityDate)) %>%
+  arrange(-Id,ActivityDate) %>%
+  filter(TotalSteps != 0)
+head(Sub_act_diaria,50)
+```
 
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+- [ ]  A primera vista podemos observar que la integridad de los datos de la BD de act_diaria es buena, solamente se que mutó la variable _ActivityDate_ de chr a date y más adelante en la limpeiza de datos _id_ de dbl a int.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+- [ ] Otra de las cosas importantes que pude notar es que hay días dónde ciertos usuarios parece ser que no usan los gadgets y por lo tanto esto en un futuro puede evolucionar en un sezgo para el análisis, por eso es importante filtrar esos valores desde esta etapa de preparación de datos. 
+- [ ] Proseguiré a hacer el mismo análisis exploratorio con las demás BD de una manera más ágil.
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+```{r}
+glimpse(calorias)
+sub_calorias <- calorias %>%
+  mutate(ActivityHour = mdy_hms(ActivityHour, tz = "UTC")) %>%
+  group_by(Id) %>%
+  summarize(total_calories_per_day = sum(Calories), avg_daily = mean(Calories), max_cal_burn = max(Calories), min_cal_burn = min(Calories))
+print(sub_calorias)
+```
+
+- [ ]  Hemos modificado la variable _ActivityHour_ para que sea un tipo de dato _date_
+- [ ]  Hicimos los **estadísticos básicos** para entender mejor a nuestra población de usuarios y poder comparar el gasto calórico de cada usuario
+- [ ]  Más adelante en el análisis si quisieramos ver tendencias diarias generales, agruparíamos por **date**; si buscamos patrones dentro del día, agruparía por **hour**; Si quisiera saber cómo se comportan los usuarios en diferentes horarios, agrupa por **user_id y hour**. Solo es cuestión de revisar que enfoque se adapata mejor en la resolución de la tarea empresarial y no perder en enfoque aunque los datos parezcan muy interesnates.
