@@ -99,7 +99,8 @@ glimpse(act_diaria)
 Sub_act_diaria <- act_diaria %>%
   mutate(ActivityDate = mdy(ActivityDate)) %>%
   arrange(-Id,ActivityDate) %>%
-  filter(TotalSteps != 0)
+  filter(TotalSteps != 0) %>%
+  select(-LoggedActivitiesDistance)
 head(Sub_act_diaria,50)
 ```
 
@@ -120,6 +121,28 @@ sub_calorias <- calorias %>%
 print(sub_calorias)
 ```
 
-- [ ]  Hemos modificado la variable _ActivityHour_ para que sea un tipo de dato _date_
+- [ ]  Hemos modificado la variable _ActivityHour_ para que sea un tipo de dato _date_. Falta modificar el valor de Id para que sea Int.
 - [ ]  Hicimos los **estadísticos básicos** para entender mejor a nuestra población de usuarios y poder comparar el gasto calórico de cada usuario
 - [ ]  Más adelante en el análisis si quisieramos ver tendencias diarias generales, agruparíamos por **date**; si buscamos patrones dentro del día, agruparía por **hour**; Si quisiera saber cómo se comportan los usuarios en diferentes horarios, agrupa por **user_id y hour**. Solo es cuestión de revisar que enfoque se adapata mejor en la resolución de la tarea empresarial y no perder en enfoque aunque los datos parezcan muy interesnates.
+
+```{r}
+sub_intensidad <- intensidad %>%
+  mutate(ActivityHour = mdy_hms(ActivityHour, tz = "UTC"))
+head(sub_intensidad)
+```
+```{r}
+sub_tiempo_sueno <- tiempo_sueno %>%
+  mutate(SleepDay = mdy_hms(SleepDay, tz = "UTC")) %>%
+  arrange(Id) %>%
+  mutate(Difsueno = TotalTimeInBed - TotalMinutesAsleep)
+head(sub_tiempo_sueno,150)
+
+```
+
+```{r}
+sub_track_peso <- track_peso %>%
+  mutate(Date = mdy_hms(Date, tz = "UTC")) %>%
+  arrange(Id) %>%
+  select(-Fat,-LogId)
+head(sub_track_peso)
+```
