@@ -1,0 +1,54 @@
+---
+title: "Proyecto de análisis de datos de Bellabeat"
+author: "Fabián Barragán Barriga"
+output:
+  html_document:
+    df_print: paged
+---
+# 2. Preparación de datos
+
+### Justificación de uso del dataset
+Primeramente se usarán datos públicos que exploren los **hábitos cotidianos de los usuarios de dispositivos inteligentes**, estos datos serán sacados  de __Kaggle__, más específicamente del dataset [FitBit Fitness Tracker Data](https://www.kaggle.com/datasets/arashnic/fitbit).
+
+Este conjunto de datos de Kaggle contiene el seguimiento de la actividad física personal en treinta usuarios de Fitbit. Treinta usuarios elegibles de Fitbit prestaron su consentimiento para el envío de datos personales de seguimiento que incluyen rendimiento de la actividad física en minutos, ritmo cardíaco y monitoreo del sueño. Incluye información sobre la actividad diaria, pasos y ritmo cardíaco que se puede usar para explorar los hábitos de los usuarios.
+
+Del Dataset original, usaremos solamente las Base de datos que a primera vista parezcan que puedan ayudarnos
+a resolver nuestra tarea empresarial, los cuales son:
+
+  1. **dailyActivity_merged.csv** para analizar el registro de actividad diaria
+  
+  2. **hourlyCalories_merged.csv** para observar cuál es momento del día donde se queman más calorias y podría estar relacionado con la actividad diaria.
+  
+  3. **hourlyIntensities_merged.csv** para observar cuál es momento del día donde el cuerpo tiene la mayor intensidad en sus movimientos, lo que podría estar relacionado con los puntos anteriores.
+  
+  4. **sleepDay_merged.csv** para analizar hábitos de sueño.
+  
+  5. **weightLogInfo_merged.csv** para analizar el seguimiento de peso de los usuarios.
+  
+### Cargando las paqueterías para análisis de datos
+```{r}
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(dplyr)
+```
+
+### Cargando las bases de datos correspondiantes
+```{r}
+setwd("/home/fabian/R/proyectos/analisis-bellabeat/datasets")
+act_diaria <- read.csv("dailyActivity_merged.csv")
+calorias <- read.csv("hourlyCalories_merged.csv")
+intensidad <- read.csv("hourlyIntensities_merged.csv")
+tiempo_sueno <- read.csv ("sleepDay_merged.csv")
+track_peso <- read.csv("weightLogInfo_merged.csv")
+
+```
+
+### Pre-exploración de datos
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
