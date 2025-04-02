@@ -146,3 +146,7 @@ sub_track_peso <- track_peso %>%
   select(-Fat,-LogId)
 head(sub_track_peso)
 ```
+
+Con esto finalizamos la preparación de datos. La siguiente fase se tratará de garantizar que los datos esten limpios, integros y listos para analizar.
+
+# 3. Limpieza de datos
