@@ -117,7 +117,7 @@ glimpse(calorias)
 sub_calorias <- calorias %>%
   mutate(ActivityHour = mdy_hms(ActivityHour, tz = "UTC")) %>%
   group_by(Id) %>%
-  summarize(total_calories_per_day = sum(Calories), avg_daily = mean(Calories), max_cal_burn = max(Calories), min_cal_burn = min(Calories))
+  summarize(total_calories_per_month = sum(Calories), avg_month = mean(Calories), max_cal_burn = max(Calories), min_cal_burn = min(Calories))
 print(sub_calorias)
 ```
 
@@ -150,3 +150,70 @@ head(sub_track_peso)
 Con esto finalizamos la preparación de datos. La siguiente fase se tratará de garantizar que los datos esten limpios, integros y listos para analizar.
 
 # 3. Limpieza de datos
+
+  **Tareas específicas  a realizar en nuestra limpieza:**
+  
+    1. Verificar si hay errores en los datos.
+    2. Transformar los datos para trabajar con ellos eficazmente.
+    3. Documentación de todas las limpiezas y manipulaciones de datos
+
+``` {r}
+#para Actividad diaria
+act_diaria_limp <- Sub_act_diaria %>%
+  rename_with(tolower) %>%
+  clean_names() %>%
+  mutate(distanciatotal = veryactivedistance +  moderatelyactivedistance + lightactivedistance +sedentaryactivedistance, comparar = distanciatotal == totaldistance, error_absoluto = abs(totaldistance - distanciatotal), minutosactivos = veryactiveminutes + fairlyactiveminutes + lightlyactiveminutes + sedentaryminutes)
+#Error Absoluto Promedio
+mae <- mean(act_diaria_limp$error_absoluto)
+print(mae)
+
+head(act_diaria_limp,200)
+ #%>%
+  #filter(comparar == TRUE)
+conteo_errores <- act_diaria_limp %>%
+  summarise(conteo_errores = sum(comparar == FALSE))
+show(conteo_errores)
+```
+**Haré una pequeña pausa para explicar lo que está ocurriendo en la limpieza de la Actividad física diaria.**
+
+- Al sumar las categorías de intensidad en las que se mueve el usuario con respecto a la distancias recorridas en cada una de ellas, podemos observar que si se comparan con la variable totaldistance los valores no coiciden en todos los casos, reconociendo un conteo total de **636** errores de trackeo de los gadgets.
+- Un MAE de 0.0856 indica que, en promedio, la diferencia entre TotalDistance y la suma de las distancias por intensidad es 0.0856 unidades (ya sean kilómetros, millas, metros, etc.).
+- El error es pequeño, lo que sugiere que las diferencias podrían deberse a redondeo o pequeños errores de trackeo, pero en la mayoría de los casos no afectaría mucho el análisis. Por lo tanto se a tomado la decisión de **NO FILTRAR LOS DATOS.**
+
+```{r}
+#calorias
+calorias_limp <- sub_calorias %>%
+  rename_with(tolower) %>%
+  clean_names() %>%
+  mutate (cal_per_day = total_calories_per_month/31 )
+show(calorias_limp)
+
+```
+- Como **NOTA** tengo que agregar que en el analisis problamente tendremos que buscar en que momento del día los usuarios queman más o menos calorías, pero hasta el momento la limpiza va excelente.
+
+```{r}
+#Intensidad
+intensidad_limp <- sub_intensidad %>%
+  rename_with(tolower) %>%
+  clean_names() 
+
+#Sueno
+ tiempo_sueno_limp <- sub_tiempo_sueno  %>%
+  rename_with(tolower) %>%
+  clean_names()
+ #peso
+track_peso_limp <- sub_track_peso %>%
+  rename_with(tolower) %>%
+  clean_names()
+```
+
+- Con esto finalizamos la limpieza de datos.
+
+# 4. Análisis de datos
+Ahora que los datos están almacenados adecuadamente y listos para el análisis, empiezaremos a ponerlos en funcionamiento.
+
+  **Tareas específicas  a realizar en nuestro análisis:**
+  
+    1. Realiza cálculos.
+    2. Identifica tendencias y relaciones.
+    3. Logra que estos conocimientos para respondan a la pregunta empresarial.
