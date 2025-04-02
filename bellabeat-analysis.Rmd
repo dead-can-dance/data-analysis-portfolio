@@ -215,5 +215,5 @@ Ahora que los datos están almacenados adecuadamente y listos para el análisis,
   **Tareas específicas  a realizar en nuestro análisis:**
   
     1. Realiza cálculos.
-    2. Identifica tendencias y relaciones.
+    2. Identifica tendencias y relaciones, así como insights de alto valor.
     3. Logra que estos conocimientos para respondan a la pregunta empresarial.
