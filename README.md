@@ -19,4 +19,4 @@ El repositorio es una __simulación de un informe compuesto de entregables__ sob
   6. Las tres recomendaciones de contenido de alto nivel basadas en el análisis
 
 ## Tecnologías usadas
-El análisis utiliza tecnologías como **SQL**, **el lenguaje de programación R**, **spreadsheets**.
+El análisis utiliza **el lenguaje de programación R**.
