@@ -116,10 +116,12 @@ head(Sub_act_diaria,50)
 glimpse(calorias)
 sub_calorias <- calorias %>%
   mutate(ActivityHour = mdy_hms(ActivityHour, tz = "UTC")) %>%
+  mutate(hour = hour(ActivityHour)) %>%
   group_by(Id) %>%
-  summarize(total_calories_per_month = sum(Calories), avg_month = mean(Calories), max_cal_burn = max(Calories), min_cal_burn = min(Calories))
-print(sub_calorias)
+  mutate(total_calories_per_month = sum(Calories), avg_month = mean(Calories), max_cal_burn = max(Calories), min_cal_burn = min(Calories))
+head(sub_calorias)
 ```
+
 
 - [ ]  Hemos modificado la variable _ActivityHour_ para que sea un tipo de dato _date_. Falta modificar el valor de Id para que sea Int.
 - [ ]  Hicimos los **estadísticos básicos** para entender mejor a nuestra población de usuarios y poder comparar el gasto calórico de cada usuario
@@ -141,6 +143,7 @@ head(sub_tiempo_sueno,150)
 
 ```{r}
 sub_track_peso <- track_peso %>%
+  mutate(IsManualReport = as.logical(toupper(IsManualReport))) %>%
   mutate(Date = mdy_hms(Date, tz = "UTC")) %>%
   arrange(Id) %>%
   select(-Fat,-LogId)
@@ -185,8 +188,9 @@ show(conteo_errores)
 calorias_limp <- sub_calorias %>%
   rename_with(tolower) %>%
   clean_names() %>%
-  mutate (cal_per_day = total_calories_per_month/31 )
-show(calorias_limp)
+  rename(calories_per_hour = calories) %>%
+  mutate (cal_per_day = total_calories_per_month/31)
+head(calorias_limp)
 
 ```
 - Como **NOTA** tengo que agregar que en el analisis problamente tendremos que buscar en que momento del día los usuarios queman más o menos calorías, pero hasta el momento la limpiza va excelente.
@@ -217,3 +221,105 @@ Ahora que los datos están almacenados adecuadamente y listos para el análisis,
     1. Realiza cálculos.
     2. Identifica tendencias y relaciones, así como insights de alto valor.
     3. Logra que estos conocimientos para respondan a la pregunta empresarial.
+    
+```{r}
+#actividad diaria
+act_diaria_limp %>%
+  select(-id,-activitydate, -trackerdistance,-distanciatotal,-comparar,-error_absoluto) %>%
+  summary()
+```
+ 
+ - Podemos destacar como puntos importantes de las estadísticas descriptivas de estos usuarios que el promedio de pasos que dan al día son de _8319_ lo cuál según [la clasificación dela Organización Mundial de la Salud](https://www.nationalgeographicla.com/ciencia/2024/02/caminar-es-bueno-para-la-salud-cuantos-pasos-debe-dar-una-persona-al-dia) consideraría a nuestra población como **moderamdamente activa**.
+ 
+ - Dado a que no se menciona cuántas mujeres y hombres hay en el dataset, y partiendo de la suposición de que ambos genéneros son equitativos en la recopilación  de datos, podemos calcular el producto de *la media de pasos dados en un 1km según  google (1450.60 steps/1km )* * *la media detotaldistance* = 8674.58 steps podemos inferir que la unidad de medida usada para las distancias está en km ya que se acerca más al promedio de pasos con la media de nuestra variable (8319 steps) que si usaramos la media de pasos  en millas que es igual a 2000 steps/milla y da como resultado (11962.990 steps).
+ 
+ - El tiempo promedio de que esta **población pasa su tiempo de manera sedentaría al día es de 955 minutos (15.91 horas)**, lo cuál es bastante alto aún si consideraramos que fracción de ese tiempo pasan en cama. Más adelante haremos ese análisis uniendo los datos.
+ 
+ - La mayoría de las personas **hacen actividades ligeras durante su día**.
+ 
+ - El **gasto calórico promedio de las personas es 2361 kcal durante el transcurso de sus actividades diarias** durante el seguimiento de ese mes.
+ 
+ 
+```{r}
+#calorias
+calorias_limp %>%
+  summary()
+```
+ - Al agrupar nuestro conjunto de datos en términos de los usuarios, podemos encontrar que tienen un patrón de comportamiento: **las calorías promedio que queman por hora es igual a la media del promedio mensual (97.39)**, lo cuál demuestra que es una constante.
+ 
+ - Lo **máximo de calorías que queman los usuarios en promedio en una hora son 386 kcal y como mínimo en promedio 66.35 kcal**, lo cuál le da credebilidad a nuestro descubriento de que nuestra población hace actividades ligeras surante el día.
+
+### Revisando el comportamiento de las calorías durante las horas del día
+
+```{r}
+sub_calorias_horas <- calorias %>%
+  mutate(ActivityHour = mdy_hms(ActivityHour, tz = "UTC")) %>%
+  mutate(hour = hour(ActivityHour)) 
+
+resumen <- sub_calorias_horas %>%
+  group_by(hour) %>%
+  summarise(promedio_calorias = mean(Calories, na.rm = TRUE))
+ggplot(data = resumen, aes(x = hour, y = promedio_calorias)) + 
+  geom_col(stat = "identity", fill = 'darkblue') + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "Promedio de Calorías Quemadas por Hora",
+       x = "Hora del Día",
+       y = "Calorías Quemadas")
+
+```
+
+- Al agrupar nuestro conjunto de datos en términos de las horas del día podemos observar que los **usuarios queman más calorías entre las 17:00 a 19:00**
+
+```{r}
+intensidad_horas <- intensidad_limp %>%
+  mutate(hour = hour(activityhour))
+
+resumen_int <- intensidad_horas %>%
+  group_by(hour)
+head(resumen_int,150)
+
+ggplot(data = resumen_int, aes(x = hour, y = averageintensity)) + 
+  geom_col(stat = "identity", fill = 'darkblue') + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "Promedio de intensidad por Hora",
+       x = "Hora del Día",
+       y = "Promedio de intensidad")
+
+```
+- En este gráfico podemos observar como **los promedios de intensidad de actividad física están relacionados con las horas del día en las que los usuarios queman más calorías**.
+
+- El siguiente paso para la visualización de nuestros datos será fusionar las variables en un único marco de datos para entender mejor como es que ambas variables están relacionadas con ayuda de un gráfico de dispersión. 
+
+```{r}
+track_peso_limp %>%
+  select(-id,-date,-ismanualreport ) %>%
+  summary()
+
+graf <- track_peso_limp %>%
+  select(-date,-ismanualreport) %>%
+  group_by(bmi)
+
+ggplot(graf, mapping = aes(x = bmi)) +
+  geom_histogram( fill = "blue", color = "black") +
+  labs(title = "Distribución del IMC de los usuarios",
+       x = "IMC",
+       y = "Frecuencia") +
+  theme_minimal()
+```
+
+- Algunas conclusiones clave que podemos obtener de este marco de datos para entender mejor a nuestra población es que según la [Clasificación de índice de masa corporal ofrecida por el gobierno de México](https://www.gob.mx/issste/articulos/que-es-el-indice-de-masa-corporal) **el promedio del índice de masa corporal de nuestra población es de 25.19, lo cuál indica que existe un ligero sobre peso por parte de nuestra población**.
+
+- Cabe resalta que como **IMC máximo tenemos datos de 47.54**, lo cuál se considera obesidad mórbida según la clasificación en la que nos estamos basando y como **IMC mínimo es de 21.45, lo cuál cae en la categría de IMC ideal**.
+
+```{r}
+tiempo_sueno_limp %>%
+  select(-id,-sleepday) %>%
+  summary()
+```
+
+- Podemos observar que **la gran mayoría de las personas solamente duerme una vez en un lapso de 24 horas**.
+
+- La **horas de sueño promedio que las personas invierten en su descanso es e 6.98 horas**, de las cuales pasan en  **7.64 horas en promedio acostadas en cama** y tardan **también en promedio 39.17 minutos en consiliar el sueño**.
+
+## 4.1 Fusionando datos
+
