@@ -97,7 +97,7 @@ el propósito de obtener un subconjunto de datos más manejable para nuestro an�
 ```{r}
 glimpse(act_diaria)
 Sub_act_diaria <- act_diaria %>%
-  mutate(ActivityDate = mdy(ActivityDate)) %>%
+  mutate(day = mdy(ActivityDate)) %>%
   arrange(-Id,ActivityDate) %>%
   filter(TotalSteps != 0) %>%
   select(-LoggedActivitiesDistance)
@@ -134,9 +134,9 @@ head(sub_intensidad)
 ```
 ```{r}
 sub_tiempo_sueno <- tiempo_sueno %>%
-  mutate(SleepDay = mdy_hms(SleepDay, tz = "UTC")) %>%
+  mutate(day = mdy_hms(SleepDay, tz = "UTC")) %>%
   arrange(Id) %>%
-  mutate(Difsueno = TotalTimeInBed - TotalMinutesAsleep)
+  mutate(Difsueno_min = TotalTimeInBed - TotalMinutesAsleep, TotalMinutesAsleepHr = TotalMinutesAsleep/60, TotalTimeInBedHr = TotalTimeInBed/60)
 head(sub_tiempo_sueno,150)
 
 ```
@@ -286,6 +286,7 @@ ggplot(data = resumen_int, aes(x = hour, y = averageintensity)) +
        y = "Promedio de intensidad")
 
 ```
+
 - En este gráfico podemos observar como **los promedios de intensidad de actividad física están relacionados con las horas del día en las que los usuarios queman más calorías**.
 
 - El siguiente paso para la visualización de nuestros datos será fusionar las variables en un único marco de datos para entender mejor como es que ambas variables están relacionadas con ayuda de un gráfico de dispersión. 
@@ -313,13 +314,80 @@ ggplot(graf, mapping = aes(x = bmi)) +
 
 ```{r}
 tiempo_sueno_limp %>%
-  select(-id,-sleepday) %>%
-  summary()
+  select(-id,-sleepday)
+summary(tiempo_sueno_limp)
+ggplot(data = tiempo_sueno_limp, mapping = aes( x = totaltimeinbedhr)) + geom_bar(color = "blue" , size = 1) 
 ```
 
 - Podemos observar que **la gran mayoría de las personas solamente duerme una vez en un lapso de 24 horas**.
 
-- La **horas de sueño promedio que las personas invierten en su descanso es e 6.98 horas**, de las cuales pasan en  **7.64 horas en promedio acostadas en cama** y tardan **también en promedio 39.17 minutos en consiliar el sueño**.
+- La **horas de sueño promedio que las personas invierten en su descanso es e 419.5 minutos (6.98 horas)**, de las cuales pasan en  **458.6 minutos (7.64 horas) en promedio acostadas en cama** y tardan **también en promedio 39.17 minutos en conciliar el sueño**.
+- Con la gráfica podemos observar rápidamente que el tiempo que pasa en cama sigue una distribución  normal en dónde la media es 7.64 horas.
 
 ## 4.1 Fusionando datos
+
+Antes de comenzar con las visualizaciones finales de datos, necesito fusionar dos data sets, los cuales son act_limp y tiempo_sueno_limp por medio de los vectores id y fecha.
+
+```{r}
+merged_data <- merge(tiempo_sueno_limp, act_diaria_limp, by=c('id', 'day'))
+head(merged_data)
+```
+
+# 5. Visualizaciones
+
+Una vez completado el análisis, crearemos algunas visualizaciones de datos. Las visualizaciones deben comunicar claramente las conclusiones y recomendaciones de alto nivel junto con los hallazgos clave.
+
+```{r}
+ggplot(data=merged_data, aes(x=totalminutesasleep, y=sedentaryminutes)) + 
+geom_point(color='darkblue') + geom_smooth() +
+  labs(title="Minutos durmiendo vs. Minutos sedentarios")
+```
+
+- Podemos observar una tendencia negativa del tiempo que las personas pasan durmiendo y el tiempo sedentario, lo que significa que el tiempo en estado sedentario las personas no lo pasan precisamente durmiendo.
+
+- Una recomendación que puede dar Bellabeat para sus futuros usuarios es reducir estos tiempos de sedentarismo durante el día.
+
+```{r}
+ggplot(data= act_diaria_limp, aes(x=totalsteps, y=calories)) + 
+  geom_point() + geom_smooth() + labs(title="Pasos totales vs. calorias")
+```
+
+- Podemos observar una correlación positiva entre los pasos totales que damos y las calorías que quemamos.
+
+# 6. Recomensaciones empresariales
+
+Ahora que terminamos de crear las visualizaciones, podemos actuar en función de los hallazgos. Estas son las conclusiones de alto nivel más importantes basadas en el análisis:
+
+Tras analizar los datos del Fitbit Fitness Tracker, encontré algunos insights clave que podrían influir en la estrategia de marketing de Bellabeat:
+
+ 1. Público objetivo:
+
+  - Mujeres con empleos de tiempo completo (según los datos de intensidad por hora).
+
+  - Pasan mucho tiempo en la computadora, en reuniones o concentradas en su trabajo (según los datos de tiempo sedentario).
+
+  - Realizan actividad física ligera para mantenerse saludables (según el análisis de tipos de actividad), pero necesitan mejorar su nivel de actividad diaria para obtener mayores beneficios para la salud.
+
+  - Podrían necesitar información sobre la creación de hábitos saludables o motivación para continuar con su progreso.
+
+  - Dado que el conjunto de datos no incluye información sobre género, se asume que los participantes representan una distribución equilibrada de géneros.
+
+  2. Mensaje Clave para la Campaña Online de Bellabeat
+La aplicación de Bellabeat no es solo otra app de fitness. Es una guía  que ayuda a las mujeres a equilibrar su vida personal y profesional con hábitos saludables. A través de recomendaciones diarias, la app educa y motiva a sus usuarias para mejorar su bienestar.
+
+  3. Ideas para Mejorar la App de Bellabeat
+  - **Número de pasos diarios:** El promedio de pasos diarios es de 8,319, una cantidad recomendada para obtener beneficios para la salud. Según estudios de los CDC, caminar 8,000 pasos al día reduce el riesgo de mortalidad en un 51%, mientras que caminar 12,000 pasos lo reduce en un 65% en comparación con quienes caminan solo 4,000 pasos. Bellabeat podría incentivar a sus usuarias a alcanzar al menos 8,000 pasos al día, explicando los beneficios para su salud.
+
+  - **Control de calorías:** Para quienes desean perder peso dado a que el IMC promedio de 25.19, la app podría ofrecer recomendaciones sobre almuerzos y cenas bajas en calorías.
+
+  - **Mejorar el sueño:** Bellabeat podría utilizar notificaciones en la app para recordar a las usuarias cuándo es hora de dormir y fomentar una rutina de descanso saludable.
+
+  - **Momentos de mayor actividad:** La mayoría de la actividad física ocurre entre las 5:00 p. m. y las 7:00 p. m., lo que sugiere que las personas suelen ir al gimnasio o salir a caminar después del trabajo. Bellabeat podría aprovechar esta franja horaria para enviar recordatorios motivacionales para salir a correr o caminar.
+
+- **Reducir el tiempo sedentario:** Para mejorar la calidad del sueño, la app podría sugerir reducir el tiempo de inactividad durante el día.
+
+## 7. Agradecimientos.
+
+Agradezco el tiempo y la disposición de leer completo mi primer análisis de datos.
+Este es un caso práctico propuesto por la última fase del curso de [Análisis de datos de Google](https://www.coursera.org/programs/analisis-de-datos-google-2024-z0buk/professional-certificates/analisis-de-datos-de-google?collectionId=QYSbq) impartido por Coursera.
 
